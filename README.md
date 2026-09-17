@@ -6,7 +6,7 @@
 
 # 
 
-# The pipeline uses Python, `transformers`, `torch`, spaCy, Trafilatura, rule-based financial entity extraction, and configurable ticker mappings. FinBERT runs locally on CPU, with lazy model loading, long-article chunking, and failure isolation.
+# The pipeline uses Python, `transformers`, `torch`, spaCy, Trafilatura, rule-based financial entity extraction, and configurable ticker mappings. FinBERT runs locally on CPU with lazy model loading, long-article chunking, and failure isolation.
 
 # 
 
@@ -58,7 +58,7 @@
 
 # 
 
-# Use `--no-sentiment` when you want to skip FinBERT processing.
+# Use `--no-sentiment` to skip FinBERT processing.
 
 # 
 
@@ -280,7 +280,7 @@
 
 # 
 
-# The system deliberately avoids treating every capitalized phrase as a company because financial articles contain people, locations, institutions, products, dates, and other non-company entities.
+# The system avoids treating every capitalized phrase as a company because financial articles contain people, locations, institutions, products, dates, and other non-company entities.
 
 # 
 
@@ -288,11 +288,11 @@
 
 # 
 
-# The article title, summary, and the beginning of the article receive additional attention because they often contain the most relevant company references.
+# The article title, summary, and beginning of the article receive additional attention because they often contain the most relevant company references.
 
 # 
 
-# The primary zone is processed separately and validated company results from the primary zone are merged with broader article-level extraction.
+# The primary zone is processed separately, and validated company results from the primary zone are merged with broader article-level extraction.
 
 # 
 

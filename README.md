@@ -32,899 +32,1049 @@
 
 # python pipeline.py --days 1 --out data/sentiment\_latest.csv
 
-Linux / macOS
+# ```
 
-python -m venv .venv
+# 
 
-source .venv/bin/activate
+# \### Linux / macOS
 
-pip install -r requirements.txt
+# 
 
-python pipeline.py --days 1 --out data/sentiment\_latest.csv
+# ```bash
 
+# python -m venv .venv
 
+# source .venv/bin/activate
 
-On the first sentiment-enabled run, the ProsusAI/finbert model weights are downloaded from the Hugging Face Hub and cached locally by transformers. Subsequent runs can reuse the cached model.
+# pip install -r requirements.txt
 
+# python pipeline.py --days 1 --out data/sentiment\_latest.csv
 
+# ```
 
-Use --no-sentiment when you want to skip FinBERT processing.
+# 
 
+# On the first sentiment-enabled run, the `ProsusAI/finbert` model weights are downloaded from the Hugging Face Hub and cached locally by `transformers`. Subsequent runs can reuse the cached model.
 
+# 
 
-Pipeline Architecture
+# Use `--no-sentiment` when you want to skip FinBERT processing.
 
-News Sources
+# 
 
-&#x20;    |
+# \## Pipeline Architecture
 
-&#x20;    v
+# 
 
-Article Collection
+# ```text
 
-&#x20;    |
+# News Sources
 
-&#x20;    v
+# &#x20;    |
 
-Web Content Extraction
+# &#x20;    v
 
-&#x20;    |
+# Article Collection
 
-&#x20;    v
+# &#x20;    |
 
-Financial Relevance Filtering
+# &#x20;    v
 
-&#x20;    |
+# Web Content Extraction
 
-&#x20;    v
+# &#x20;    |
 
-Company / Entity Extraction
+# &#x20;    v
 
-&#x20;    |
+# Financial Relevance Filtering
 
-&#x20;    v
+# &#x20;    |
 
-Ticker Extraction \& Resolution
+# &#x20;    v
 
-&#x20;    |
+# Company / Entity Extraction
 
-&#x20;    v
+# &#x20;    |
 
-Financial Event Extraction
+# &#x20;    v
 
-&#x20;    |
+# Ticker Extraction \& Resolution
 
-&#x20;    +--> Percentages
+# &#x20;    |
 
-&#x20;    |
+# &#x20;    v
 
-&#x20;    +--> Currency Values
+# Financial Event Extraction
 
-&#x20;    |
+# &#x20;    |
 
-&#x20;    v
+# &#x20;    +--> Percentages
 
-FinBERT Sentiment Analysis
+# &#x20;    |
 
-&#x20;    |
+# &#x20;    +--> Currency Values
 
-&#x20;    v
+# &#x20;    |
 
-Persistence + Deduplication
+# &#x20;    v
 
-&#x20;    |
+# FinBERT Sentiment Analysis
 
-&#x20;    v
+# &#x20;    |
 
-Structured CSV Output
+# &#x20;    v
 
-Main Features
+# Persistence + Deduplication
 
-Multi-source financial news ingestion
+# &#x20;    |
 
+# &#x20;    v
 
+# Structured CSV Output
 
-The project contains source adapters for configured financial-news feeds and web sources, including:
+# ```
 
+# 
 
+# \## Main Features
 
-CNBC
+# 
 
-Financial Times RSS
+# \### Multi-source Financial News Ingestion
 
-The Block
+# 
 
-Investing.com
+# The project contains source adapters for configured financial-news feeds and web sources, including:
 
-Nasdaq
+# 
 
-MarketWatch
+# \- CNBC
 
-Moneycontrol
+# \- Financial Times RSS
 
-Reuters feeds
+# \- The Block
 
-Google News Business
+# \- Investing.com
 
-Reddit
+# \- Nasdaq
 
+# \- MarketWatch
 
+# \- Moneycontrol
 
-Source availability depends on feed status, publisher restrictions, network conditions, and the current configuration.
+# \- Reuters feeds
 
+# \- Google News Business
 
+# \- Reddit
 
-Article extraction
+# 
 
+# Source availability depends on feed status, publisher restrictions, network conditions, and the current configuration.
 
+# 
 
-trafilatura is used to retrieve and extract main article content where access is available.
+# \### Article Extraction
 
+# 
 
+# `trafilatura` is used to retrieve and extract main article content where access is available.
 
-When full-page extraction is unavailable, the pipeline can fall back to available title and summary information rather than stopping the entire run.
+# 
 
+# When full-page extraction is unavailable, the pipeline can fall back to available title and summary information rather than stopping the entire run.
 
+# 
 
-Financial relevance filtering
+# \### Financial Relevance Filtering
 
+# 
 
+# The pipeline applies financial relevance heuristics using terms such as:
 
-The pipeline applies financial relevance heuristics using terms such as:
+# 
 
+# ```text
 
+# earnings
 
-earnings
+# guidance
 
-guidance
+# IPO
 
-IPO
+# dividend
 
-dividend
+# buyback
 
-buyback
+# shares
 
-shares
+# stock
 
-stock
+# market
 
-market
+# profit
 
-profit
+# loss
 
-loss
+# revenue
 
-revenue
+# forecast
 
-forecast
+# merger
 
-merger
+# acquisition
 
-acquisition
+# hedge
 
-hedge
+# fund
 
-fund
+# portfolio
 
-portfolio
+# investment
 
-investment
+# investor
 
-investor
+# trading
 
-trading
+# stake
 
-stake
+# holding
 
-holding
+# capital
 
-capital
+# assets
 
-assets
+# private equity
 
-private equity
+# venture capital
 
-venture capital
+# ```
 
+# 
 
+# This helps reduce unrelated content before deeper analysis.
 
-This helps reduce unrelated content before deeper analysis.
+# 
 
+# \### Company Extraction
 
+# 
 
-Company extraction
+# Company recognition uses a hybrid approach:
 
+# 
 
+# \- legal company-name patterns
 
-Company recognition uses a hybrid approach:
+# \- possessive-name patterns
 
+# \- curated known-company names
 
+# \- ticker-aware validation
 
-legal company-name patterns
+# \- spaCy Named Entity Recognition
 
-possessive-name patterns
+# \- structural filtering
 
-curated known-company names
+# \- conflict handling
 
-ticker-aware validation
+# 
 
-spaCy Named Entity Recognition
+# The system deliberately avoids treating every capitalized phrase as a company because financial articles contain people, locations, institutions, products, dates, and other non-company entities.
 
-structural filtering
+# 
 
-conflict handling
+# \### Primary-Zone Analysis
 
+# 
 
+# The article title, summary, and the beginning of the article receive additional attention because they often contain the most relevant company references.
 
-The system deliberately avoids treating every capitalized phrase as a company because financial articles contain people, locations, institutions, products, dates, and other non-company entities.
+# 
 
+# The primary zone is processed separately and validated company results from the primary zone are merged with broader article-level extraction.
 
+# 
 
-Primary-zone analysis
+# \### Ticker Extraction and Resolution
 
+# 
 
+# Ticker symbols are extracted independently from company names and can then be resolved through several levels:
 
-The article title, summary, and the beginning of the article receive additional attention because they often contain the most relevant company references.
+# 
 
+# ```text
 
+# Exact company match
 
-The primary zone is processed separately and validated company results from the primary zone are merged with broader article-level extraction.
+# &#x20;       |
 
+# &#x20;       v
 
+# Alias match
 
-Ticker extraction and resolution
+# &#x20;       |
 
+# &#x20;       v
 
+# Known ticker match
 
-Ticker symbols are extracted independently from company names and can then be resolved through several levels:
+# &#x20;       |
 
+# &#x20;       v
 
+# Conservative fuzzy matching
 
-Exact company match
+# ```
 
-&#x20;       |
+# 
 
-&#x20;       v
+# Ticker mappings are stored in:
 
-Alias match
+# 
 
-&#x20;       |
+# ```text
 
-&#x20;       v
+# data/ticker\_mapping.csv
 
-Known ticker match
+# ```
 
-&#x20;       |
+# 
 
-&#x20;       v
+# This allows company-to-ticker mappings to be updated without modifying the Python source code.
 
-Conservative fuzzy matching
+# 
 
+# \### Financial Event Extraction
 
+# 
 
-Ticker mappings are stored in:
+# The pipeline detects financial events such as:
 
+# 
 
+# ```text
 
-data/ticker\_mapping.csv
+# IPO
 
+# dividend
 
+# acquisition
 
-This allows company-to-ticker mappings to be updated without modifying the Python source code.
+# merger
 
+# ```
 
+# 
 
-Financial event extraction
+# \### Quantitative Extraction
 
+# 
 
+# The parser extracts:
 
-The pipeline detects financial events such as:
+# 
 
+# \- percentages
 
+# \- currency values
 
-IPO
+# 
 
-dividend
+# Examples:
 
-acquisition
+# 
 
-merger
+# ```text
 
-Quantitative extraction
+# 10%
 
+# 12.5%
 
+# $5 billion
 
-The parser extracts:
+# $61 million
 
+# £100 million
 
+# ```
 
-percentages
+# 
 
-currency values
+# \## Sentiment Analysis
 
+# 
 
+# The project uses:
 
-Examples:
+# 
 
+# ```text
 
+# ProsusAI/finbert
 
-10%
+# ```
 
-12.5%
+# 
 
-$5 billion
+# for financial-domain sentiment analysis.
 
-$61 million
+# 
 
-£100 million
+# FinBERT classifies financial text as:
 
-Sentiment Analysis
+# 
 
+# ```text
 
+# positive
 
-The project uses:
+# negative
 
+# neutral
 
+# ```
 
-ProsusAI/finbert
+# 
 
+# The pipeline also stores a numerical sentiment score.
 
+# 
 
-for financial-domain sentiment analysis.
+# \### Local Inference
 
+# 
 
+# FinBERT runs locally through:
 
-FinBERT classifies financial text as:
+# 
 
+# ```text
 
+# PyTorch
 
-positive
+# Hugging Face Transformers
 
-negative
+# CPU
 
-neutral
+# ```
 
+# 
 
+# The model is loaded lazily and cached during the process.
 
-The pipeline also stores a numerical sentiment score.
+# 
 
+# There is no per-article sentiment API call.
 
+# 
 
-Local inference
+# \### Long Article Handling
 
+# 
 
+# Long financial articles can exceed transformer input limits. Instead of simply truncating them, the pipeline uses overlapping chunks:
 
-FinBERT runs locally through:
+# 
 
+# ```text
 
+# Long Article
 
-PyTorch
+# &#x20;   |
 
-Hugging Face Transformers
+# &#x20;   v
 
-CPU
+# Tokenizer
 
+# &#x20;   |
 
+# &#x20;   v
 
-The model is loaded lazily and cached during the process.
+# Overlapping Chunks
 
+# &#x20;   |
 
+# &#x20;   v
 
-There is no per-article sentiment API call.
+# FinBERT Inference
 
+# &#x20;   |
 
+# &#x20;   v
 
-Long article handling
+# Average Chunk Probabilities
 
+# &#x20;   |
 
+# &#x20;   v
 
-Long financial articles can exceed transformer input limits. Instead of simply truncating them, the pipeline uses overlapping chunks:
+# Final Sentiment
 
+# ```
 
+# 
 
-Long Article
+# This allows more of the article to contribute to the final sentiment result.
 
-&#x20;   |
+# 
 
-&#x20;   v
+# \### Failure Isolation
 
-Tokenizer
+# 
 
-&#x20;   |
+# Errors affecting one source or article are logged and isolated where possible so that other articles can continue to be processed.
 
-&#x20;   v
+# 
 
-Overlapping Chunks
+# \## Output
 
-&#x20;   |
+# 
 
-&#x20;   v
+# The pipeline writes its primary results to:
 
-FinBERT Inference
+# 
 
-&#x20;   |
+# ```text
 
-&#x20;   v
+# data/sentiment\_latest.csv
 
-Average Chunk Probabilities
+# ```
 
-&#x20;   |
+# 
 
-&#x20;   v
+# Current output columns:
 
-Final Sentiment
+# 
 
+# ```text
 
+# source
 
-This allows more of the article to contribute to the final sentiment result.
+# url
 
+# published
 
+# title
 
-Failure isolation
+# summary
 
+# text
 
+# companies
 
-Errors affecting one source or article are logged and isolated where possible so that other articles can continue to be processed.
+# tickers
 
+# mapped\_tickers
 
+# percentages
 
-Output
+# currency\_values
 
+# events
 
+# sentiment\_label
 
-The pipeline writes its primary results to:
+# sentiment\_score
 
+# ```
 
+# 
 
-data/sentiment\_latest.csv
+# \### Example
 
+# 
 
+# A processed article can produce information such as:
 
-Current output columns:
+# 
 
+# ```text
 
+# companies: Anthropic
 
-source
+# tickers: NVDA
 
-url
+# mapped\_tickers: NVDA
 
-published
+# percentages: 37%, 75%
 
-title
+# currency\_values: $965 billion, $2 trillion
 
-summary
+# events: ipo
 
-text
+# sentiment\_label: negative
 
-companies
+# sentiment\_score: -0.45
 
-tickers
+# ```
 
-mapped\_tickers
+# 
 
-percentages
+# \## Persistence and Deduplication
 
-currency\_values
+# 
 
-events
+# The runner preserves existing output rows across executions.
 
-sentiment\_label
+# 
 
-sentiment\_score
+# The process is approximately:
 
-Example
+# 
 
+# ```text
 
+# Load existing CSV
 
-A processed article can produce information such as:
+# &#x20;      |
 
+# &#x20;      v
 
+# Collect new articles
 
-companies: Anthropic
+# &#x20;      |
 
-tickers: NVDA
+# &#x20;      v
 
-mapped\_tickers: NVDA
+# Identify duplicate article keys
 
-percentages: 37%, 75%
+# &#x20;      |
 
-currency\_values: $965 billion, $2 trillion
+# &#x20;      v
 
-events: ipo
+# Merge existing + new rows
 
-sentiment\_label: negative
+# &#x20;      |
 
-sentiment\_score: -0.45
+# &#x20;      v
 
-Persistence and Deduplication
+# Write updated dataset
 
+# ```
 
+# 
 
-The runner preserves existing output rows across executions.
+# The `--days N` option controls the date window for newly accepted articles.
 
+# 
 
+# It does not delete previously persisted rows.
 
-The process is approximately:
+# 
 
+# The system uses stable article keys to prevent the same article from being repeatedly inserted on subsequent runs.
 
+# 
 
-Load existing CSV
+# Output writing uses a temporary file before replacing the target output, reducing the risk of leaving a partially written CSV after an interrupted write.
 
-&#x20;      |
+# 
 
-&#x20;      v
+# \## The `--days N` Window
 
-Collect new articles
+# 
 
-&#x20;      |
+# Each collected item's publication date is checked against the configured rolling `N`-day window before being accepted as a new row.
 
-&#x20;      v
+# 
 
-Identify duplicate article keys
+# Supported publication-date formats include common RSS and ISO-style timestamps.
 
-&#x20;      |
+# 
 
-&#x20;      v
+# The window affects newly collected articles only. Existing persisted rows are preserved.
 
-Merge existing + new rows
+# 
 
-&#x20;      |
+# \## Command-Line Options
 
-&#x20;      v
+# 
 
-Write updated dataset
+# \### `--days N`
 
+# 
 
+# Process newly collected articles inside an `N`-day rolling window.
 
-The --days N option controls the date window for newly accepted articles.
+# 
 
+# ```bat
 
+# python pipeline.py --days 1
 
-It does not delete previously persisted rows.
+# ```
 
+# 
 
+# \### `--no-sentiment`
 
-The system uses stable article keys to prevent the same article from being repeatedly inserted on subsequent runs.
+# 
 
+# Skip FinBERT processing.
 
+# 
 
-Output writing uses a temporary file before replacing the target output, reducing the risk of leaving a partially written CSV after an interrupted write.
+# ```bat
 
+# python pipeline.py --days 1 --no-sentiment
 
+# ```
 
-The --days N Window
+# 
 
+# \### `--mock-sentiment`
 
+# 
 
-Each collected item's publication date is checked against the configured rolling N-day window before being accepted as a new row.
+# Use mocked neutral sentiment for testing and offline execution.
 
+# 
 
+# ```bat
 
-Supported publication-date formats include common RSS and ISO-style timestamps.
+# python pipeline.py --days 1 --mock-sentiment
 
+# ```
 
+# 
 
-The window affects newly collected articles only. Existing persisted rows are preserved.
+# \### `--ticker-map PATH`
 
+# 
 
+# Use a custom company-to-ticker mapping file.
 
-Command-Line Options
+# 
 
-\--days N
+# ```bat
 
+# python pipeline.py --ticker-map data/ticker\_mapping.csv
 
+# ```
 
-Process newly collected articles inside an N-day rolling window.
+# 
 
+# \### `--no-spacy`
 
+# 
 
-python pipeline.py --days 1
+# Disable spaCy NER and use the remaining extraction heuristics.
 
-\--no-sentiment
+# 
 
+# ```bat
 
+# python pipeline.py --days 1 --no-spacy
 
-Skip FinBERT processing.
+# ```
 
+# 
 
+# \## Offline Test Harness
 
-python pipeline.py --days 1 --no-sentiment
+# 
 
-\--mock-sentiment
+# The project includes:
 
+# 
 
+# ```text
 
-Use mocked neutral sentiment for testing and offline execution.
+# sample\_run.py
 
+# ```
 
+# 
 
-python pipeline.py --days 1 --mock-sentiment
+# Run:
 
-\--ticker-map PATH
+# 
 
+# ```bat
 
+# python sample\_run.py
 
-Use a custom company-to-ticker mapping file.
+# ```
 
+# 
 
+# This performs a small offline-style demonstration using example articles and mocked sentiment.
 
-python pipeline.py --ticker-map data/ticker\_mapping.csv
+# 
 
-\--no-spacy
+# It produces:
 
+# 
 
+# ```text
 
-Disable spaCy NER and use the remaining extraction heuristics.
+# data/sample\_output.csv
 
+# ```
 
+# 
 
-python pipeline.py --days 1 --no-spacy
+# \## Testing
 
-Offline Test Harness
+# 
 
+# The project includes automated tests covering:
 
+# 
 
-The project includes:
+# \- company and entity extraction
 
+# \- ticker extraction and resolution
 
+# \- financial relevance filtering
 
-sample\_run.py
+# \- sentiment processing
 
+# \- persistence
 
+# \- duplicate handling
 
-Run:
+# \- path and configuration behavior
 
+# 
 
+# Current test status:
 
-python sample\_run.py
+# 
 
+# ```text
 
+# 143 passed
 
-This performs a small offline-style demonstration using example articles and mocked sentiment.
+# ```
 
+# 
 
+# \## Project Structure
 
-It produces:
+# 
 
+# ```text
 
+# fin/
 
-data/sample\_output.csv
+# |
 
-Testing
+# +-- app/
 
+# |   +-- models.py
 
+# |   +-- runner.py
 
-The project includes automated tests covering:
+# |   +-- services.py
 
+# |
 
+# +-- data/
 
-company and entity extraction
+# |   +-- ticker\_mapping.csv
 
-ticker extraction and resolution
+# |   +-- sentiment\_latest.csv
 
-financial relevance filtering
+# |
 
-sentiment processing
+# +-- scripts/
 
-persistence
+# |   +-- diagnose\_extraction.py
 
-duplicate handling
+# |   +-- finbert\_diagnostics.py
 
-path and configuration behavior
+# |   +-- finbert\_smoke\_test.py
 
+# |
 
+# +-- sources/
 
-Current test status:
+# |   +-- cnbc.py
 
+# |   +-- ft.py
 
+# |   +-- google\_news\_business.py
 
-143 passed
+# |   +-- investing.py
 
-Project Structure
+# |   +-- marketwatch.py
 
-fin/
+# |   +-- moneycontrol.py
 
-|
+# |   +-- nasdaq.py
 
-+-- app/
+# |   +-- reddit.py
 
-|   +-- models.py
+# |   +-- reuters\_feeds.py
 
-|   +-- runner.py
+# |   +-- theblock.py
 
-|   +-- services.py
+# |
 
-|
+# +-- tests/
 
-+-- data/
+# |
 
-|   +-- ticker\_mapping.csv
+# +-- utils/
 
-|   +-- sentiment\_latest.csv
+# |   +-- dates.py
 
-|
+# |   +-- entities.py
 
-+-- scripts/
+# |   +-- extract.py
 
-|   +-- diagnose\_extraction.py
+# |   +-- filtering.py
 
-|   +-- finbert\_diagnostics.py
+# |   +-- ner.py
 
-|   +-- finbert\_smoke\_test.py
+# |   +-- network.py
 
-|
+# |   +-- parse.py
 
-+-- sources/
+# |   +-- sentiment.py
 
-|   +-- cnbc.py
+# |
 
-|   +-- ft.py
+# +-- config.py
 
-|   +-- google\_news\_business.py
+# +-- pipeline.py
 
-|   +-- investing.py
+# +-- requirements.txt
 
-|   +-- marketwatch.py
+# +-- sample\_run.py
 
-|   +-- moneycontrol.py
+# +-- README.md
 
-|   +-- nasdaq.py
+# ```
 
-|   +-- reddit.py
+# 
 
-|   +-- reuters\_feeds.py
+# \## Data and Publisher Access
 
-|   +-- theblock.py
+# 
 
-|
+# Publisher access and permitted usage vary by source.
 
-+-- tests/
+# 
 
-|
+# Some sites may be paywalled, rate-limited, protected by anti-bot systems, dynamically rendered, or otherwise restrict automated access.
 
-+-- utils/
+# 
 
-|   +-- dates.py
+# The project should be used in accordance with applicable publisher Terms of Service, robots.txt requirements, licenses, and feed/API terms.
 
-|   +-- entities.py
+# 
 
-|   +-- extract.py
+# Financial Times content is handled through configured RSS metadata and summaries by default rather than attempting to bypass paywalls.
 
-|   +-- filtering.py
+# 
 
-|   +-- ner.py
+# For production deployments, licensed or official APIs and feeds can be substituted where appropriate.
 
-|   +-- network.py
+# 
 
-|   +-- parse.py
+# \## Limitations
 
-|   +-- sentiment.py
+# 
 
-|
+# Real-world financial news is highly variable.
 
-+-- config.py
+# 
 
-+-- pipeline.py
+# Known limitations include:
 
-+-- requirements.txt
+# 
 
-+-- sample\_run.py
+# \- some publishers restrict automated requests
 
-+-- README.md
+# \- article extraction can fail on protected or dynamically rendered pages
 
-Data and Publisher Access
+# \- NER systems can generate false positives
 
+# \- company names may be ambiguous or abbreviated
 
+# \- publisher boilerplate can appear in extracted content
 
-Publisher access and permitted usage vary by source.
+# \- entity extraction depends on available article text and configured company/ticker knowledge
 
+# 
 
+# The pipeline addresses these issues with filtering, validation, fallbacks, and failure isolation, but perfect extraction cannot be guaranteed for every article.
 
-Some sites may be paywalled, rate-limited, protected by anti-bot systems, dynamically rendered, or otherwise restrict automated access.
+# 
 
+# \## Future Scope
 
+# 
 
-The project should be used in accordance with applicable publisher Terms of Service, robots.txt requirements, licenses, and feed/API terms.
+# Possible extensions include:
 
+# 
 
+# \- larger company and ticker knowledge bases
 
-Financial Times content is handled through configured RSS metadata and summaries by default rather than attempting to bypass paywalls.
+# \- source-specific article parsers
 
+# \- licensed financial-news APIs
 
+# \- PostgreSQL or other database storage
 
-For production deployments, licensed or official APIs and feeds can be substituted where appropriate.
+# \- real-time streaming ingestion
 
+# \- historical sentiment analytics
 
+# \- sector-level sentiment aggregation
 
-Limitations
+# \- a web-based financial intelligence dashboard
 
+# \- stronger context-aware entity disambiguation
 
+# \- alerting for important financial events
 
-Real-world financial news is highly variable.
+# 
 
+# \## Technologies
 
+# 
 
-Known limitations include:
+# ```text
 
+# Python 3.13
 
+# PyTorch
 
-some publishers restrict automated requests
+# Hugging Face Transformers
 
-article extraction can fail on protected or dynamically rendered pages
+# ProsusAI/FinBERT
 
-NER systems can generate false positives
+# spaCy
 
-company names may be ambiguous or abbreviated
+# Trafilatura
 
-publisher boilerplate can appear in extracted content
+# BeautifulSoup
 
-entity extraction depends on available article text and configured company/ticker knowledge
+# Requests
 
+# pytest
 
+# CSV
 
-The pipeline addresses these issues with filtering, validation, fallbacks, and failure isolation, but perfect extraction cannot be guaranteed for every article.
+# RSS
 
+# ```
 
+# 
 
-Future Scope
+# \## Responsible Use
 
+# 
 
+# This project is intended for financial-news analysis and research.
 
-Possible extensions include:
+# 
 
-
-
-larger company and ticker knowledge bases
-
-source-specific article parsers
-
-licensed financial-news APIs
-
-PostgreSQL or other database storage
-
-real-time streaming ingestion
-
-historical sentiment analytics
-
-sector-level sentiment aggregation
-
-a web-based financial intelligence dashboard
-
-stronger context-aware entity disambiguation
-
-alerting for important financial events
-
-Technologies
-
-Python 3.13
-
-PyTorch
-
-Hugging Face Transformers
-
-ProsusAI/FinBERT
-
-spaCy
-
-Trafilatura
-
-BeautifulSoup
-
-Requests
-
-pytest
-
-CSV
-
-RSS
-
-Responsible Use
-
-
-
-This project is intended for financial-news analysis and research.
-
-
-
-Extracted entities and sentiment scores are automated analytical outputs and should not be treated as guaranteed financial advice or as a substitute for independent research.
+# Extracted entities and sentiment scores are automated analytical outputs and should not be treated as guaranteed financial advice or as a substitute for independent research.
 
